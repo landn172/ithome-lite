@@ -1,5 +1,5 @@
 <template lang="pug">
-.container(v-show="show")
+.container
   .topic-title {{topic.title}}
   .topic-num 1楼
   .topic-info
@@ -28,36 +28,33 @@ export default {
   },
   data () {
     return {
-      show: false,
       loading: false,
       topic: {}
     }
   },
   mounted () {
+    Object.assign(this.$data, this.$options.data())
     this.getTopic()
   },
   onReachBottom () {
     this.getComments()
   },
-  onUnload () {
-    this.show = false
-  },
   methods: {
     async getTopic () {
-      const { query } = this.$root.$mp
+      const { query } = this.$route
       const topic = await api.getTopic(query.id)
       if (!topic) return
       topic.content = topic.content.replace('!--IMG_1--', `img src="${topic.imgs[0]}" width="100%" /`)
       topic.reply = topic.reply.map(formatComment)
       this.topic = Object.assign({
-        title: decodeURI(query.title)
+        title: decodeURI(query.title),
+        vc: decodeURI(query.vc)
       }, topic)
-      this.show = true
     },
     async getComments () {
       if (this.loading) return
       this.loading = true
-      const { query } = this.$root.$mp
+      const { query } = this.$route
       const comments = this.topic.reply
       const lastComment = comments[comments.length - 1]
       const newComments = await api.getTopicComments(query.id, lastComment.id)
